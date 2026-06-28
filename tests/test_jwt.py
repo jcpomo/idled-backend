@@ -25,3 +25,11 @@ def test_decode_bad_signature(monkeypatch):
     token = _make({"sub": "u-1", "role": "administracion"}, secret="wrong")
     with pytest.raises(InvalidTokenError):
         decode_token(token)
+
+def test_decode_invalid_role_raises(monkeypatch):
+    monkeypatch.setenv("JWT_SECRET", SECRET)
+    from app.core.config import get_settings
+    get_settings.cache_clear()
+    token = _make({"sub": "u-1", "role": "not_a_real_role", "name": "X"})
+    with pytest.raises(InvalidTokenError):
+        decode_token(token)

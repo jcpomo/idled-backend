@@ -7,6 +7,15 @@ from app.audit.models import AuditLog
 from app.core.db import get_session
 from app.agente.provider import LLMResult, ToolCall
 from app.agente.fake_provider import FakeLLMProvider
+from app.erp_gateway.base import ERPGateway, Factura
+from app.erp_gateway.dependencies import get_erp_gateway
+
+
+class _FakeGateway(ERPGateway):
+    async def facturas_pendientes(self, token: str):
+        return [Factura(id="F-1001", cliente="ACME", total=10.0, vencimiento="2026-07-01", pagada=False)]
+    async def stock_articulo(self, token: str, referencia: str):
+        return None
 
 SECRET = "test-secret-which-is-long-enough-to-avoid-pyjwt-key-warnings-0123456789"
 
@@ -35,6 +44,7 @@ def app_with_overrides(session, monkeypatch):
 
     app.dependency_overrides[get_session] = _override_session
     app.dependency_overrides[get_orchestrator] = _fake_orchestrator
+    app.dependency_overrides[get_erp_gateway] = lambda: _FakeGateway()
     yield app
     app.dependency_overrides.clear()
 

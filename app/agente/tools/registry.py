@@ -17,3 +17,10 @@ class ToolRegistry:
 
     def specs_for_role(self, role: Role) -> list[LLMToolSpec]:
         return [t.to_spec() for t in self.for_role(role)]
+
+def build_default_registry() -> "ToolRegistry":
+    from app.agente.tools.erp_tools import build_factura_tool, build_stock_tool
+    reg = ToolRegistry()
+    reg.register(build_factura_tool())
+    reg.register(build_stock_tool())
+    return reg

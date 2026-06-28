@@ -62,7 +62,10 @@ async def test_chat_streams_and_persists_and_audits(app_with_overrides, session)
     assert '"type": "meta"' in body or '"type":"meta"' in body
     # auditoría
     rows = (await session.execute(select(AuditLog))).scalars().all()
-    assert any(row.action == "chat_query" for row in rows)
+    chat_rows = [r for r in rows if r.action == "chat_query"]
+    assert chat_rows
+    assert chat_rows[0].params.get("model")
+    assert "tools_used" in chat_rows[0].params
 
 @pytest.mark.asyncio
 async def test_chat_requires_auth(app_with_overrides):

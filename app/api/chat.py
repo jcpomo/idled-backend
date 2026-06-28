@@ -22,7 +22,7 @@ router = APIRouter(prefix="/api", tags=["chat"])
 
 class ChatBody(BaseModel):
     message: str
-    conversation_id: str | None = None
+    conversation_id: uuid.UUID | None = None
 
 def get_orchestrator() -> AgentOrchestrator:
     return AgentOrchestrator(
@@ -43,8 +43,7 @@ async def chat(
     orchestrator: AgentOrchestrator = Depends(get_orchestrator),
 ) -> StreamingResponse:
     token = authorization.removeprefix("Bearer ").strip()
-    conv_id = uuid.UUID(body.conversation_id) if body.conversation_id else None
-    conv = await get_or_create_conversation(session, user.external_id, conv_id)
+    conv = await get_or_create_conversation(session, user.external_id, body.conversation_id)
     history = await load_history(session, conv.id)
     ctx = ToolContext(token=token, erp=erp, user_external_id=user.external_id)
 

@@ -11,6 +11,12 @@ class Settings(BaseSettings):
     qdrant_url: str = "http://qdrant:6333"
     redis_url: str = "redis://redis:6379"
 
+    model_chat_provider: str = "openai"
+    model_chat: str = "gpt-4o"
+    model_search_provider: str = "openai"
+    model_search: str = "gpt-4o-mini"
+    openai_api_key: str = ""
+
 @lru_cache
 def get_settings() -> Settings:
     return Settings()

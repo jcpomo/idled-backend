@@ -20,7 +20,10 @@ dev = ["pytest>=8.3", "pytest-asyncio>=0.24", "ruff>=0.6", "aiosqlite>=0.20"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-markers = ["e2e: requires the running docker compose stack"]
+markers = [
+  "e2e: requires the running docker compose stack",
+  "live: hits real LLM APIs; needs OPENAI_API_KEY",
+]
 
 [tool.ruff]
 line-length = 100

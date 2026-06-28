@@ -15,3 +15,15 @@ class MockERPGateway(ERPGateway):
             )
             resp.raise_for_status()
             return [Factura(**row) for row in resp.json()]
+
+    async def stock_articulo(self, token: str, referencia: str):
+        from app.erp_gateway.base import Articulo
+        async with httpx.AsyncClient(transport=self._transport) as client:
+            resp = await client.get(
+                f"{self._base_url}/api/stock",
+                params={"referencia": referencia},
+                headers={"Authorization": f"Bearer {token}"},
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            return Articulo(**data) if data else None

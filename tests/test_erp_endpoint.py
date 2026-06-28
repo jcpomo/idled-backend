@@ -15,6 +15,8 @@ def _token(role="administracion"):
 class FakeGateway(ERPGateway):
     async def facturas_pendientes(self, token: str) -> list[Factura]:
         return [Factura(id="F-9", cliente="X", total=5.0, vencimiento="2026-07-01", pagada=False)]
+    async def stock_articulo(self, token: str, referencia: str):
+        return None
 
 @pytest.fixture
 def app_with_overrides(session, monkeypatch):

@@ -55,3 +55,28 @@ async def test_role_without_permission_gets_no_facturas_tool():
     await orch.run("¿facturas?", history=[], role=Role.PRODUCCION, ctx=_ctx())
     _, tools_arg = provider.complete_calls[0]
     assert tools_arg == []
+
+@pytest.mark.asyncio
+async def test_max_rounds_exhausted_returns_final_answer():
+    # model keeps asking for the tool; with max_tool_rounds=1 the loop runs once,
+    # then a final tools=None completion produces the answer.
+    provider = FakeLLMProvider(scripted_results=[
+        LLMResult(tool_calls=[ToolCall(id="c1", name="facturas_pendientes", arguments={})]),
+        LLMResult(text="No puedo seguir."),
+    ])
+    orch = AgentOrchestrator(provider=provider, registry=_registry(), max_tool_rounds=1)
+    run = await orch.run("loop", history=[], role=Role.ADMINISTRACION, ctx=_ctx())
+    assert run.text == "No puedo seguir."
+
+@pytest.mark.asyncio
+async def test_disallowed_tool_call_is_not_executed():
+    # produccion lacks facturas:read; even if the model returns a tool_call for it,
+    # the orchestrator must NOT execute it (tools_used stays empty).
+    provider = FakeLLMProvider(scripted_results=[
+        LLMResult(tool_calls=[ToolCall(id="c1", name="facturas_pendientes", arguments={})]),
+        LLMResult(text="No tengo acceso a esa herramienta."),
+    ])
+    orch = AgentOrchestrator(provider=provider, registry=_registry())
+    run = await orch.run("¿facturas?", history=[], role=Role.PRODUCCION, ctx=_ctx())
+    assert run.tools_used == []
+    assert run.text == "No tengo acceso a esa herramienta."

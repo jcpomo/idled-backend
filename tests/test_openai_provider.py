@@ -50,3 +50,28 @@ async def test_complete_plain_text():
     p = OpenAIProvider(model="gpt-4o-mini", api_key="x", client=client)
     result = await p.complete([LLMMessage(role="user", content="hola")])
     assert result.text == "hola" and result.tool_calls == []
+
+class _Chunk:
+    def __init__(self, content):
+        self.choices = [type("Ch", (), {"delta": type("D", (), {"content": content})()})]
+
+class FakeStreamClient:
+    def __init__(self, chunks):
+        self._chunks = chunks
+        self.captured = {}
+        self.chat = type("C", (), {"completions": self})()
+    async def create(self, **kwargs):
+        self.captured = kwargs
+        async def _gen():
+            for c in self._chunks:
+                yield c
+        return _gen()
+
+@pytest.mark.asyncio
+async def test_stream_text_yields_deltas():
+    chunks = [_Chunk("he"), _Chunk("llo"), _Chunk(None)]
+    client = FakeStreamClient(chunks)
+    p = OpenAIProvider(model="gpt-4o", api_key="x", client=client)
+    result = [t async for t in p.stream_text([LLMMessage(role="user", content="hi")])]
+    assert result == ["he", "llo"]
+    assert client.captured["stream"] is True

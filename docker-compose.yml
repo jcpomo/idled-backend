@@ -36,7 +36,9 @@ services:
   mini-laravel:
     build: ./mini-laravel
     ports: ["8080:8080"]
-    env_file: ./mini-laravel/.env
+    env_file:
+      - path: ./mini-laravel/.env
+        required: false
 
 volumes:
   pgdata:

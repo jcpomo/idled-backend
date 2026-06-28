@@ -1,6 +1,8 @@
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from app.core.db import Base
+import app.audit.models  # noqa: F401 — registers AuditLog with Base.metadata
+import app.auth.models   # noqa: F401 — registers User with Base.metadata
 
 @pytest_asyncio.fixture
 async def session() -> AsyncSession:

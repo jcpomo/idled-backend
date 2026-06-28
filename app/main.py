@@ -1,6 +1,8 @@
 from fastapi import FastAPI
+from app.api import erp
 
 app = FastAPI(title="IDLED Backend")
+app.include_router(erp.router)
 
 @app.get("/health")
 async def health() -> dict[str, str]:

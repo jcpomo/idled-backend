@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from app.core.db import Base
 import app.audit.models  # noqa: F401 — registers AuditLog with Base.metadata
 import app.auth.models   # noqa: F401 — registers User with Base.metadata
+import app.agente.models  # noqa: F401 — registers AiConversation/AiMessage with Base.metadata
 
 @pytest_asyncio.fixture
 async def session() -> AsyncSession:

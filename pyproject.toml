@@ -28,6 +28,7 @@ testpaths = ["tests"]
 markers = [
   "e2e: requires the running docker compose stack",
   "live: hits real LLM APIs; needs OPENAI_API_KEY",
+  "integration: requires the running docker compose infra (minio, etc.)",
 ]
 
 [tool.ruff]

@@ -14,9 +14,11 @@ ROLE_PERMISSIONS: dict[Role, set[str]] = {
     Role.ADMIN: set(),  # comodín, ver has_permission
     Role.DIRECCION: {
         "facturas:read", "compras:read", "ventas:read", "stock:read", "kpis:read",
+        "documentos:read",
     },
     Role.COMERCIAL: {
         "clientes:read", "pedidos:read", "ventas:read", "stock:read",
+        "documentos:read", "documentos:write",
     },
     Role.ADMINISTRACION: {
         "facturas:read", "facturas:write", "cobros:read",
@@ -24,12 +26,15 @@ ROLE_PERMISSIONS: dict[Role, set[str]] = {
     },
     Role.PRODUCCION: {
         "ordenes:read", "tiempos:read", "componentes:read",
+        "documentos:read", "documentos:write",
     },
     Role.COMPRAS_ALMACEN: {
         "stock:read", "proveedores:read", "compras:read", "ofertas:read",
+        "documentos:read", "documentos:write",
     },
     Role.LECTURA: {
         "facturas:read", "compras:read", "ventas:read", "stock:read", "clientes:read",
+        "documentos:read",
     },
 }
 

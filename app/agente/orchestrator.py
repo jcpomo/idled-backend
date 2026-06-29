@@ -42,7 +42,7 @@ class AgentOrchestrator:
             if not result.tool_calls:
                 return AgentRun(text=result.text, tools_used=tools_used)
             # assistant turn that requested tools
-            messages.append(LLMMessage(role="assistant", content=result.text or ""))
+            messages.append(LLMMessage(role="assistant", content=result.text or "", tool_calls=result.tool_calls))
             for call in result.tool_calls:
                 tool = self._registry.get(call.name)
                 if tool is None or call.name not in allowed:

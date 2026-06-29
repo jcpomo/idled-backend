@@ -16,6 +16,15 @@ class OpenAIProvider(LLMProvider):
                 d["tool_call_id"] = m.tool_call_id
             if m.name:
                 d["name"] = m.name
+            if m.tool_calls:
+                d["tool_calls"] = [
+                    {
+                        "id": tc.id,
+                        "type": "function",
+                        "function": {"name": tc.name, "arguments": json.dumps(tc.arguments)},
+                    }
+                    for tc in m.tool_calls
+                ]
             out.append(d)
         return out
 

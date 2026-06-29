@@ -2,21 +2,22 @@ from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator
 from pydantic import BaseModel
 
+class ToolCall(BaseModel):
+    id: str
+    name: str
+    arguments: dict
+
 class LLMMessage(BaseModel):
     role: str
     content: str
     tool_call_id: str | None = None
     name: str | None = None
+    tool_calls: list[ToolCall] | None = None
 
 class LLMToolSpec(BaseModel):
     name: str
     description: str
     parameters: dict
-
-class ToolCall(BaseModel):
-    id: str
-    name: str
-    arguments: dict
 
 class LLMResult(BaseModel):
     text: str = ""

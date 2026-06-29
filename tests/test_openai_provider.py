@@ -1,6 +1,6 @@
 import json
 import pytest
-from app.agente.provider import LLMMessage, LLMToolSpec
+from app.agente.provider import LLMMessage, LLMToolSpec, ToolCall
 from app.agente.openai_provider import OpenAIProvider
 
 class _Msg:
@@ -75,3 +75,17 @@ async def test_stream_text_yields_deltas():
     result = [t async for t in p.stream_text([LLMMessage(role="user", content="hi")])]
     assert result == ["he", "llo"]
     assert client.captured["stream"] is True
+
+def test_to_openai_messages_translates_assistant_tool_calls():
+    p = OpenAIProvider(model="gpt-4o", api_key="x", client=object())  # client unused by this method
+    msgs = [
+        LLMMessage(role="assistant", content="",
+                   tool_calls=[ToolCall(id="c1", name="facturas_pendientes", arguments={"a": 1})]),
+        LLMMessage(role="tool", content="ok", tool_call_id="c1", name="facturas_pendientes"),
+    ]
+    out = p._to_openai_messages(msgs)
+    assert out[0]["tool_calls"][0] == {
+        "id": "c1", "type": "function",
+        "function": {"name": "facturas_pendientes", "arguments": '{"a": 1}'},
+    }
+    assert out[1]["role"] == "tool" and out[1]["tool_call_id"] == "c1"

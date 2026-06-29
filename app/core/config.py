@@ -17,6 +17,14 @@ class Settings(BaseSettings):
     model_search: str = "gpt-4o-mini"
     openai_api_key: str = ""
 
+    minio_endpoint: str = "http://minio:9000"
+    minio_access_key: str = "minio"
+    minio_secret_key: str = "minio12345"
+    documents_bucket: str = "documents"
+    model_embed: str = "text-embedding-3-large"
+    embed_dim: int = 3072
+    qdrant_collection: str = "documents"
+
 @lru_cache
 def get_settings() -> Settings:
     return Settings()

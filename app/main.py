@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from app.api import chat, documentos, erp
@@ -8,7 +9,7 @@ from app.documentos.deps import get_storage
 async def lifespan(app: FastAPI):
     # Ensure the object-storage bucket exists before any upload is served.
     # Mirrors the worker ensuring the Qdrant collection at job time.
-    get_storage().ensure_bucket()
+    await asyncio.to_thread(get_storage().ensure_bucket)
     yield
 
 

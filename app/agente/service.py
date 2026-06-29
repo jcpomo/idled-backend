@@ -9,7 +9,10 @@ async def get_or_create_conversation(
 ) -> AiConversation:
     if conversation_id is not None:
         result = await session.execute(
-            select(AiConversation).where(AiConversation.id == conversation_id)
+            select(AiConversation).where(
+                AiConversation.id == conversation_id,
+                AiConversation.user_external_id == user_external_id,
+            )
         )
         existing = result.scalar_one_or_none()
         if existing is not None:

@@ -20,7 +20,10 @@ class ToolRegistry:
 
 def build_default_registry() -> "ToolRegistry":
     from app.agente.tools.erp_tools import build_factura_tool, build_stock_tool
+    from app.documentos.tools import build_buscar_documentos_tool
+    from app.documentos.deps import get_embedder, get_vector_store
     reg = ToolRegistry()
     reg.register(build_factura_tool())
     reg.register(build_stock_tool())
+    reg.register(build_buscar_documentos_tool(embedder=get_embedder(), vector_store=get_vector_store()))
     return reg

@@ -56,3 +56,19 @@ async def test_other_user_move_404(client):
         r = await ac.post(f"/api/tasks/{tid}/move", json={"status": "done", "position": 0},
                           headers={"Authorization": f"Bearer {_token(sub='intruder')}"})
         assert r.status_code == 404
+
+@pytest.mark.asyncio
+async def test_other_user_update_404(client):
+    async with client as ac:
+        tid = await _make_task(ac, {"Authorization": f"Bearer {_token(sub='owner')}"})
+        r = await ac.patch(f"/api/tasks/{tid}", json={"title": "hack"},
+                           headers={"Authorization": f"Bearer {_token(sub='intruder')}"})
+        assert r.status_code == 404
+
+@pytest.mark.asyncio
+async def test_other_user_delete_404(client):
+    async with client as ac:
+        tid = await _make_task(ac, {"Authorization": f"Bearer {_token(sub='owner')}"})
+        r = await ac.delete(f"/api/tasks/{tid}",
+                            headers={"Authorization": f"Bearer {_token(sub='intruder')}"})
+        assert r.status_code == 404

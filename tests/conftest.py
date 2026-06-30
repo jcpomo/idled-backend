@@ -5,6 +5,7 @@ import app.audit.models  # noqa: F401 — registers AuditLog with Base.metadata
 import app.auth.models   # noqa: F401 — registers User with Base.metadata
 import app.agente.models  # noqa: F401 — registers AiConversation/AiMessage with Base.metadata
 import app.documentos.models  # noqa: F401 — registers Document with Base.metadata
+import app.gestor.models  # noqa: F401 — registers Project/Task with Base.metadata
 
 @pytest_asyncio.fixture
 async def session() -> AsyncSession:

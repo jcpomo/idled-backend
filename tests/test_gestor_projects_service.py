@@ -1,7 +1,9 @@
 import pytest
+from sqlalchemy import select
 from app.gestor.service import (
     create_project, list_projects, get_owned_project, rename_project, delete_project,
 )
+from app.gestor.models import Task
 
 @pytest.mark.asyncio
 async def test_create_list_owned(session):
@@ -23,3 +25,12 @@ async def test_rename_and_delete_owner_only(session):
     assert await delete_project(session, p.id, "ext-2") is False  # not owner
     assert await delete_project(session, p.id, "ext-1") is True
     assert await get_owned_project(session, p.id, "ext-1") is None
+
+@pytest.mark.asyncio
+async def test_delete_project_cascades_tasks(session):
+    p = await create_project(session, "ext-1", "P")
+    session.add(Task(project_id=p.id, title="t"))
+    await session.commit()
+    assert await delete_project(session, p.id, "ext-1") is True
+    rows = (await session.execute(select(Task).where(Task.project_id == p.id))).scalars().all()
+    assert rows == []

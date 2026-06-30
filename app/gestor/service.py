@@ -127,3 +127,41 @@ async def delete_task(
     await session.delete(task)
     await session.commit()
     return True
+
+async def _renumber(session: AsyncSession, project_id: uuid.UUID, status: str) -> None:
+    result = await session.execute(
+        select(Task).where(Task.project_id == project_id, Task.status == status)
+        .order_by(Task.position, Task.created_at)
+    )
+    for index, task in enumerate(result.scalars().all()):
+        task.position = index
+
+async def move_task(
+    session: AsyncSession, task_id: uuid.UUID, user_external_id: str, *,
+    status: str, position: int,
+) -> Task | None:
+    if not is_valid_status(status):
+        raise ValueError(f"Estado inválido: {status}")
+    task = await get_owned_task(session, task_id, user_external_id)
+    if task is None:
+        return None
+    old_status = task.status
+    task.status = status
+    # Flush so the DB reflects the new status: the target-column query below then
+    # includes the moved task (filtered out by id), and the old-column renumber excludes it.
+    await session.flush()
+    # Rebuild the target column with the moved task inserted at `position`.
+    result = await session.execute(
+        select(Task).where(Task.project_id == task.project_id, Task.status == status)
+        .order_by(Task.position, Task.created_at)
+    )
+    others = [t for t in result.scalars().all() if t.id != task.id]
+    reordered = others[:position] + [task] + others[position:]
+    for index, t in enumerate(reordered):
+        t.position = index
+    # If it changed columns, renumber the source column to close the gap.
+    if old_status != status:
+        await _renumber(session, task.project_id, old_status)
+    await session.commit()
+    await session.refresh(task)
+    return task

@@ -39,3 +39,20 @@ async def test_update_and_delete_owner_only(session):
     assert await delete_task(session, t.id, "ext-2") is False
     assert await delete_task(session, t.id, "ext-1") is True
     assert await get_owned_task(session, t.id, "ext-1") is None
+
+@pytest.mark.asyncio
+async def test_list_tasks_ordered_by_status_then_position(session):
+    p = await create_project(session, "ext-1", "P")
+    await create_task(session, p.id, "ext-1", title="a")               # open, pos 0
+    await create_task(session, p.id, "ext-1", title="b")               # open, pos 1
+    await create_task(session, p.id, "ext-1", title="c", status="done")  # done, pos 0
+    mine = await list_tasks(session, p.id, "ext-1")
+    # status sorts alphabetically: done < open, then by position
+    assert [t.title for t in mine] == ["c", "a", "b"]
+
+@pytest.mark.asyncio
+async def test_get_owned_task_blocks_other_user(session):
+    p = await create_project(session, "ext-1", "P")
+    t = await create_task(session, p.id, "ext-1", title="a")
+    assert await get_owned_task(session, t.id, "ext-2") is None   # not owner -> no access
+    assert await get_owned_task(session, t.id, "ext-1") is not None

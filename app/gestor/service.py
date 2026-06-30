@@ -1,7 +1,8 @@
 import uuid
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func as safunc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.gestor.models import Project, Task
+from app.gestor.statuses import is_valid_status
 
 async def create_project(session: AsyncSession, user_external_id: str, name: str) -> Project:
     project = Project(user_external_id=user_external_id, name=name)
@@ -46,5 +47,83 @@ async def delete_project(
         return False
     await session.execute(delete(Task).where(Task.project_id == project_id))
     await session.delete(project)
+    await session.commit()
+    return True
+
+async def create_task(
+    session: AsyncSession, project_id: uuid.UUID, user_external_id: str, *,
+    title: str, task_type: str = "PPTO", status: str = "open",
+    assignee: str | None = None, due_date: str | None = None,
+) -> Task | None:
+    if not is_valid_status(status):
+        raise ValueError(f"Estado inválido: {status}")
+    project = await get_owned_project(session, project_id, user_external_id)
+    if project is None:
+        return None
+    result = await session.execute(
+        select(safunc.max(Task.position)).where(
+            Task.project_id == project_id, Task.status == status
+        )
+    )
+    max_pos = result.scalar()
+    position = 0 if max_pos is None else max_pos + 1
+    task = Task(
+        project_id=project_id, title=title, task_type=task_type, status=status,
+        assignee=assignee, due_date=due_date, position=position,
+    )
+    session.add(task)
+    await session.commit()
+    await session.refresh(task)
+    return task
+
+async def list_tasks(
+    session: AsyncSession, project_id: uuid.UUID, user_external_id: str
+) -> list[Task] | None:
+    project = await get_owned_project(session, project_id, user_external_id)
+    if project is None:
+        return None
+    result = await session.execute(
+        select(Task).where(Task.project_id == project_id)
+        .order_by(Task.status, Task.position)
+    )
+    return list(result.scalars().all())
+
+async def get_owned_task(
+    session: AsyncSession, task_id: uuid.UUID, user_external_id: str
+) -> Task | None:
+    result = await session.execute(
+        select(Task).join(Project, Task.project_id == Project.id).where(
+            Task.id == task_id, Project.user_external_id == user_external_id
+        )
+    )
+    return result.scalar_one_or_none()
+
+async def update_task(
+    session: AsyncSession, task_id: uuid.UUID, user_external_id: str, *,
+    title: str | None = None, task_type: str | None = None,
+    assignee: str | None = None, due_date: str | None = None,
+) -> Task | None:
+    task = await get_owned_task(session, task_id, user_external_id)
+    if task is None:
+        return None
+    if title is not None:
+        task.title = title
+    if task_type is not None:
+        task.task_type = task_type
+    if assignee is not None:
+        task.assignee = assignee
+    if due_date is not None:
+        task.due_date = due_date
+    await session.commit()
+    await session.refresh(task)
+    return task
+
+async def delete_task(
+    session: AsyncSession, task_id: uuid.UUID, user_external_id: str
+) -> bool:
+    task = await get_owned_task(session, task_id, user_external_id)
+    if task is None:
+        return False
+    await session.delete(task)
     await session.commit()
     return True

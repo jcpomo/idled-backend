@@ -1,7 +1,7 @@
 import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from app.api import chat, documentos, erp, projects
+from app.api import chat, documentos, erp, projects, tasks
 from app.documentos.deps import get_storage
 
 
@@ -18,6 +18,7 @@ app.include_router(erp.router)
 app.include_router(chat.router)
 app.include_router(documentos.router)
 app.include_router(projects.router)
+app.include_router(tasks.router)
 
 @app.get("/health")
 async def health() -> dict[str, str]:

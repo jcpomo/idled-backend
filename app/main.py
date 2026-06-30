@@ -1,7 +1,7 @@
 import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from app.api import chat, documentos, erp
+from app.api import chat, documentos, erp, projects
 from app.documentos.deps import get_storage
 
 
@@ -17,6 +17,7 @@ app = FastAPI(title="IDLED Backend", lifespan=lifespan)
 app.include_router(erp.router)
 app.include_router(chat.router)
 app.include_router(documentos.router)
+app.include_router(projects.router)
 
 @app.get("/health")
 async def health() -> dict[str, str]:

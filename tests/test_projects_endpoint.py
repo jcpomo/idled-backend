@@ -48,9 +48,12 @@ async def test_other_user_gets_404(client):
     async with client as ac:
         pid = (await ac.post("/api/projects", json={"name": "P"},
                              headers={"Authorization": f"Bearer {_token(sub='owner')}"})).json()["id"]
-        r = await ac.get(f"/api/projects/{pid}/tasks",
-                         headers={"Authorization": f"Bearer {_token(sub='intruder')}"})
+        ih = {"Authorization": f"Bearer {_token(sub='intruder')}"}
+        r = await ac.get(f"/api/projects/{pid}/tasks", headers=ih)
         assert r.status_code == 404
+        assert (await ac.patch(f"/api/projects/{pid}", json={"name": "hack"}, headers=ih)).status_code == 404
+        assert (await ac.delete(f"/api/projects/{pid}", headers=ih)).status_code == 404
+        assert (await ac.post(f"/api/projects/{pid}/tasks", json={"title": "x"}, headers=ih)).status_code == 404
 
 @pytest.mark.asyncio
 async def test_invalid_status_422(client):
